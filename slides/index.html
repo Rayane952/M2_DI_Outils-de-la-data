@@ -3,297 +3,187 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Outils de la Data - M2 DI</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/white.css">
+    <title>Outils de la Data - M2 Développement Informatique</title>
     <style>
-        .reveal .slides section {
-            text-align: left;
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f7f9fb;
+            color: #1f2d3d;
         }
-        .reveal h1, .reveal h2, .reveal h3 {
-            color: #2c3e50;
-        }
-        .reveal .author {
-            color: #3498db;
-            font-weight: bold;
-        }
-        .reveal code {
-            background-color: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-        .reveal pre code {
-            background-color: #2d2d2d;
-            color: #f8f8f2;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        .diagram {
+        header {
+            background: #0a6efd;
+            color: white;
+            padding: 40px 20px;
             text-align: center;
-            font-family: monospace;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin: 20px 0;
+        }
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+        section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+        h1, h2, h3 {
+            margin-top: 0;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .card {
+            border: 1px solid #e1e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            background: #fdfefe;
+        }
+        .tag {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            background: #e8f0ff;
+            color: #0a58ca;
+        }
+        .link-list a {
+            display: inline-block;
+            margin-top: 12px;
+            color: #0a6efd;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        @media (max-width: 600px) {
+            header {
+                padding: 30px 15px;
+            }
+            main {
+                padding: 24px 15px 60px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="reveal">
-        <div class="slides">
-            <!-- Slide 1: Titre -->
-            <section>
-                <h1>Outils de la Data</h1>
-                <h2>Master 2 - Data Intelligence</h2>
-                <p class="author">Formateur : Abid Hamza</p>
-            </section>
+    <header>
+        <h1>Outils de la Data</h1>
+        <p>Master 2 Développement Informatique — Formateur : Abid Hamza</p>
+        <p>Parcours guidé entre outils Data et pratiques Data Engineer</p>
+    </header>
+    <main>
+        <section>
+            <h2>Parcours Data Tools</h2>
+            <p>Pour comprendre les fondamentaux et visualiser rapidement les données, commencez par ces outils. Chaque outil correspond à un exercice du dépôt.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>Apache Superset</h3>
+                    <p>Créez un dashboard métier complet à partir des données de ventes.</p>
+                    <span class="tag">Exercice 01</span>
+                </div>
+                <div class="card">
+                    <h3>Metabase</h3>
+                    <p>Construisez un espace d’exploration self-service pour les équipes métier.</p>
+                    <span class="tag">Exercice 02</span>
+                </div>
+                <div class="card">
+                    <h3>ELK Stack (Kibana)</h3>
+                    <p>Analysez des logs applicatifs et créez des vues opérationnelles.</p>
+                    <span class="tag">Exercice 03</span>
+                </div>
+                <div class="card">
+                    <h3>Grafana + Prometheus</h3>
+                    <p>Surveillez une plateforme et déclenchez des alertes fiables.</p>
+                    <span class="tag">Exercice 05</span>
+                </div>
+            </div>
+        </section>
 
-            <!-- Slide 2: Plan -->
-            <section>
-                <h2>Plan du cours</h2>
-                <ol>
-                    <li>Introduction aux outils de la data</li>
-                    <li>Écosystème des outils de données</li>
-                    <li>Outils de collecte et ingestion</li>
-                    <li>Outils de stockage</li>
-                    <li>Outils de traitement et transformation</li>
-                    <li>Outils d'analyse et visualisation</li>
-                    <li>Outils de machine learning</li>
-                    <li>Outils de déploiement et orchestration</li>
-                    <li>Choix des outils selon le contexte</li>
-                    <li>Bonnes pratiques et recommandations</li>
-                </ol>
-            </section>
+        <section>
+            <h2>Parcours Data Engineer</h2>
+            <p>Ces ateliers et exercices structurent un pipeline complet, du traitement au déploiement.</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>Apache Spark</h3>
+                    <p>Mettre en place un notebook de traitement massif avec PySpark.</p>
+                    <span class="tag">Exercice 04</span>
+                </div>
+                <div class="card">
+                    <h3>Apache Airflow</h3>
+                    <p>Orchestrer des DAGs complets : extraction, transformation, reporting.</p>
+                    <span class="tag">Exercice 06</span>
+                </div>
+                <div class="card">
+                    <h3>dbt</h3>
+                    <p>Structurer les modèles SQL (staging, marts, tests) comme en production.</p>
+                    <span class="tag">Exercice 07</span>
+                </div>
+                <div class="card">
+                    <h3>Atelier Stack Moderne</h3>
+                    <p>Assembler Superset, Airflow, dbt, Spark et Grafana sur un même projet.</p>
+                    <span class="tag">Atelier 03</span>
+                </div>
+            </div>
+        </section>
 
-            <!-- Slide 3: Introduction -->
-            <section>
-                <section>
-                    <h2>1. Introduction aux outils de la data</h2>
-                    <h3>Pourquoi les outils de data sont essentiels ?</h3>
-                    <ul>
-                        <li><strong>Volume</strong> : Explosion des données (Big Data)</li>
-                        <li><strong>Variété</strong> : Données structurées, semi-structurées, non structurées</li>
-                        <li><strong>Vélocité</strong> : Traitement en temps réel nécessaire</li>
-                        <li><strong>Valeur</strong> : Extraction d'insights actionnables</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>Les défis actuels</h3>
-                    <div class="diagram">
-                        <pre>
-Données Brutes → Traitement → Analyse → Insights → Décisions
-     ↓              ↓           ↓         ↓          ↓
-  Collecte      Stockage    Analyse  Visualisation Action
-                        </pre>
-                    </div>
-                </section>
-                <section>
-                    <h3>Objectifs de ce cours</h3>
-                    <ul>
-                        <li>Comprendre l'écosystème complet</li>
-                        <li>Maîtriser les outils essentiels</li>
-                        <li>Savoir choisir les bons outils</li>
-                        <li>Mettre en pratique</li>
-                    </ul>
-                </section>
-            </section>
+        <section>
+            <h2>Comment s’entraîner</h2>
+            <ul>
+                <li>Chaque exercice contient un scénario métier, des données synthétiques et un guide complet.</li>
+                <li>Les ateliers proposent des projets plus longs pour simuler des conditions réelles.</li>
+                <li>Les corrections sont protégées par mot de passe (Abidexercice123) et situées dans chaque dossier.</li>
+                <li>Les sections “Livrables” précisent ce que vous devez produire.</li>
+            </ul>
+        </section>
 
-            <!-- Slide 4: Écosystème -->
-            <section>
-                <section>
-                    <h2>2. Écosystème des outils de données</h2>
-                    <h3>Architecture typique d'un pipeline de données</h3>
-                    <div class="diagram">
-                        <pre>
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Collecte   │ --> │  Stockage   │ --> │  Traitement │
-│  (Ingestion) │     │             │     │             │
-└─────────────┘     └─────────────┘     └─────────────┘
-                                              │
-                                              ↓
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Visualisation│ <-- │   Analyse   │ <-- │  ML/AI      │
-└─────────────┘     └─────────────┘     └─────────────┘
-                        </pre>
-                    </div>
-                </section>
-                <section>
-                    <h3>Catégories d'outils</h3>
-                    <ol>
-                        <li><strong>Collecte et Ingestion</strong>
-                            <ul><li>APIs, Web Scraping, ETL/ELT</li></ul>
-                        </li>
-                        <li><strong>Stockage</strong>
-                            <ul><li>Bases de données, Data Warehouses, Data Lakes, NoSQL</li></ul>
-                        </li>
-                        <li><strong>Traitement</strong>
-                            <ul><li>Batch processing, Stream processing, Transformation</li></ul>
-                        </li>
-                        <li><strong>Analyse</strong>
-                            <ul><li>Business Intelligence, Analytics, Reporting</li></ul>
-                        </li>
-                        <li><strong>Machine Learning</strong>
-                            <ul><li>Frameworks ML, MLOps, AutoML</li></ul>
-                        </li>
-                        <li><strong>Orchestration</strong>
-                            <ul><li>Workflow management, Scheduling, Monitoring</li></ul>
-                        </li>
-                    </ol>
-                </section>
-            </section>
+        <section>
+            <h2>Répartition recommandée</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>Phase 1 — Explorer</h3>
+                    <p>Superset, Metabase, ELK : comprendre les données existantes.</p>
+                </div>
+                <div class="card">
+                    <h3>Phase 2 — Industrialiser</h3>
+                    <p>Grafana, Spark, Airflow, dbt : mettre en production un pipeline robuste.</p>
+                </div>
+                <div class="card">
+                    <h3>Phase 3 — Intégrer</h3>
+                    <p>Ateliers complets : construire une stack moderne de bout en bout.</p>
+                </div>
+            </div>
+        </section>
 
-            <!-- Slide 5: Collecte -->
-            <section>
-                <section>
-                    <h2>3. Outils de collecte et ingestion</h2>
-                    <h3>Outils d'extraction</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr;">
-                        <div>
-                            <h4>Python Libraries</h4>
-                            <ul>
-                                <li><code>requests</code> : Requêtes HTTP</li>
-                                <li><code>BeautifulSoup</code> : Web scraping</li>
-                                <li><code>Scrapy</code> : Framework de scraping</li>
-                                <li><code>pandas</code> : Manipulation de données</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4>Outils ETL/ELT</h4>
-                            <ul>
-                                <li><strong>Apache Airflow</strong> : Orchestration</li>
-                                <li><strong>Talend</strong> : Plateforme ETL</li>
-                                <li><strong>Apache NiFi</strong> : Ingestion</li>
-                                <li><strong>Fivetran</strong> : ELT cloud</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-                <section>
-                    <h3>Schéma d'ingestion</h3>
-                    <div class="diagram">
-                        <pre>
-Sources de données
-    │
-    ├── APIs REST/SOAP
-    ├── Bases de données
-    ├── Fichiers (CSV, JSON, XML)
-    ├── Streams (Kafka, RabbitMQ)
-    └── Web scraping
-         │
-         ↓
-   [ETL/ELT Pipeline]
-         │
-         ↓
-   [Data Warehouse/Lake]
-                        </pre>
-                    </div>
-                </section>
-            </section>
+        <section>
+            <h2>Liens utiles</h2>
+            <div class="link-list">
+                <a href="https://github.com/AbidHamza/M2_DI_Outils-de-la-data" target="_blank">Dépôt GitHub</a><br>
+                <a href="https://superset.apache.org/" target="_blank">Apache Superset</a><br>
+                <a href="https://www.metabase.com/" target="_blank">Metabase</a><br>
+                <a href="https://www.elastic.co/what-is/elk-stack" target="_blank">ELK Stack</a><br>
+                <a href="https://grafana.com/" target="_blank">Grafana</a><br>
+                <a href="https://spark.apache.org/" target="_blank">Apache Spark</a><br>
+                <a href="https://airflow.apache.org/" target="_blank">Apache Airflow</a><br>
+                <a href="https://docs.getdbt.com/" target="_blank">dbt</a>
+            </div>
+        </section>
 
-            <!-- Slide 6: Stockage -->
-            <section>
-                <section>
-                    <h2>4. Outils de stockage</h2>
-                    <h3>Bases de données relationnelles</h3>
-                    <ul>
-                        <li><strong>PostgreSQL</strong> : Open source, robuste, extensions</li>
-                        <li><strong>MySQL/MariaDB</strong> : Populaire, performant, facile</li>
-                        <li><strong>SQL Server</strong> : Solution Microsoft, BI intégré</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>Data Warehouses</h3>
-                    <ul>
-                        <li><strong>Snowflake</strong> : Cloud-native, scaling automatique</li>
-                        <li><strong>BigQuery</strong> : Serverless, analytics intégré</li>
-                        <li><strong>Redshift</strong> : Data warehouse AWS, performances élevées</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>Data Lakes & NoSQL</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr;">
-                        <div>
-                            <h4>Data Lakes</h4>
-                            <ul>
-                                <li>Apache Hadoop HDFS</li>
-                                <li>AWS S3</li>
-                                <li>Azure Data Lake</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4>NoSQL</h4>
-                            <ul>
-                                <li><strong>MongoDB</strong> : Documents</li>
-                                <li><strong>Cassandra</strong> : Wide-column</li>
-                                <li><strong>Redis</strong> : In-memory</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-                <section>
-                    <h3>Schéma de choix de stockage</h3>
-                    <div class="diagram">
-                        <pre>
-Données structurées → SQL (PostgreSQL, MySQL)
-Données semi-structurées → NoSQL (MongoDB)
-Analytics → Data Warehouse (Snowflake, BigQuery)
-Big Data → Data Lake (S3, HDFS)
-Cache → Redis, Memcached
-                        </pre>
-                    </div>
-                </section>
-            </section>
-
-            <!-- Slide 7: Traitement -->
-            <section>
-                <section>
-                    <h2>5. Outils de traitement et transformation</h2>
-                    <h3>Traitement par lots (Batch)</h3>
-                    <ul>
-                        <li><strong>Apache Spark</strong> : Traitement distribué, MLlib</li>
-                        <li><strong>Pandas</strong> : Manipulation Python, facile</li>
-                        <li><strong>Dask</strong> : Pandas distribué, scaling horizontal</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>Traitement en streaming</h3>
-                    <ul>
-                        <li><strong>Apache Kafka</strong> : Message broker distribué</li>
-                        <li><strong>Apache Flink</strong> : Stream processing, faible latence</li>
-                        <li><strong>Apache Storm</strong> : Real-time analytics</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>Outils de transformation</h3>
-                    <ul>
-                        <li><strong>dbt</strong> : Transformation SQL, versioning, testing</li>
-                        <li><strong>Apache Airflow</strong> : Orchestration, workflows</li>
-                        <li><strong>Luigi</strong> : Pipeline Python, simple</li>
-                    </ul>
-                </section>
-            </section>
-
-            <!-- Slide 8: Analyse -->
-            <section>
-                <section>
-                    <h2>6. Outils d'analyse et visualisation</h2>
-                    <h3>Business Intelligence (BI)</h3>
-                    <ul>
-                        <li><strong>Tableau</strong> : Visualisations avancées, dashboards</li>
-                        <li><strong>Power BI</strong> : Intégration Office 365, self-service</li>
-                        <li><strong>Looker</strong> : Modélisation de données, analytics</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>Outils open source</h3>
-                    <ul>
-                        <li><strong>Apache Superset</strong> : Dashboards interactifs</li>
-                        <li><strong>Metabase</strong> : Simple, self-service</li>
-                        <li><strong>Grafana</strong> : Monitoring, time-series</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>Bibliothèques Python</h3>
+        <section>
+            <h2>Questions ?</h2>
+            <p>Tout se passe sur le dépôt GitHub : issues, discussions, corrections.</p>
+            <p>Bon apprentissage et amusez-vous sur les outils !</p>
+        </section>
+    </main>
+</body>
+</html>
                     <ul>
                         <li><strong>Matplotlib</strong> : Visualisation de base, flexible</li>
                         <li><strong>Seaborn</strong> : Statistiques visuelles, interface haut niveau</li>

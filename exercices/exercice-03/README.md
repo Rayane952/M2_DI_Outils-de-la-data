@@ -1,22 +1,35 @@
 # Exercice 03 : ELK Stack (Elasticsearch, Logstash, Kibana) - Analyse de logs
 
-## 🎯 Objectifs
+## Objectifs pédagogiques
 
-- Installer et configurer l'ELK Stack
-- Ingérer des données avec Logstash
-- Indexer dans Elasticsearch
-- Visualiser dans Kibana
-- Maîtriser un stack d'analyse de données complet
+1. Comprendre la chaîne complète d’un stack log (ingestion → indexation → visualisation).
+2. Mettre en place Logstash pour transformer et router des événements.
+3. Construire un monitoring Kibana crédible permettant d’investiguer des incidents.
+4. Rédiger un rapport d’analyse démontrant la capacité à exploiter les visualisations.
 
-## 📋 Prérequis
+## Prérequis techniques
 
-- Docker et Docker Compose
-- 4GB RAM minimum
-- Connaissances de base en JSON
+- Docker et Docker Compose installés.
+- Au moins 4 Go de RAM libres pour faire tourner Elasticsearch + Kibana.
+- Connaissances de base en JSON et en requêtes HTTP (curl ou équivalent).
+- Familiarité avec les expressions KQL (Kibana Query Language) appréciée.
 
-## 📦 Installation
+## Scénario
 
-### Avec Docker Compose (Recommandé)
+Vous êtes Data/Platform Engineer pour une API e-commerce. Le support fonctionnel remonte des lenteurs et des erreurs HTTP 5xx sur certains endpoints critiques. Votre mission est de :
+
+1. Collecter les logs applicatifs (fichiers JSON) avec Logstash.
+2. Indexer les événements dans Elasticsearch pour permettre la recherche et l’agrégation.
+3. Concevoir un dashboard Kibana « Monitoring Application » qui réponde aux questions suivantes :
+   - Quels endpoints sont les plus sollicités heure par heure ?
+   - Quelles sont les erreurs récurrentes (codes >= 400) ?
+   - Quels clients (IP) génèrent le plus de trafic ?
+   - Quels sont les temps de réponse moyens/max par endpoint ?
+4. Documenter vos découvertes dans `resultats.md` : insights, anomalies détectées, pistes d’optimisation.
+
+## Installation rapide
+
+### Option recommandée : Docker Compose
 
 Créez un fichier `docker-compose.yml` :
 
@@ -60,7 +73,7 @@ Lancez avec :
 docker-compose up -d
 ```
 
-## 📊 Données
+## Données fournies
 
 1. **Générez des logs simulés** :
    ```bash
@@ -68,7 +81,9 @@ docker-compose up -d
    python generer_logs.py
    ```
 
-## 🎓 Instructions
+Le script crée un dossier `donnees/logs/` contenant plusieurs fichiers JSON répartis par jour. Ces fichiers simulent des requêtes API (endpoint, status, temps de réponse, IP client…).
+
+## Plan de travail détaillé
 
 ### Étape 1 : Configuration Logstash
 
@@ -119,10 +134,11 @@ output {
 ### Étape 3 : Configuration Kibana
 
 1. **Accédez à Kibana** : http://localhost:5601
-2. **Configurez l'index pattern** :
-   - Allez dans Stack Management > Index Patterns
-   - Créez un pattern : `logs-*`
-   - Sélectionnez `@timestamp` comme time field
+2. **Créez un data view (index pattern)** :
+   - Stack Management > Kibana > Data Views > Create
+   - Nom : `logs`
+   - Index pattern : `logs-*`
+   - Time field : `@timestamp`
 
 ### Étape 4 : Créer des visualisations dans Kibana
 
@@ -186,7 +202,16 @@ GET /logs-*/_search
 }
 ```
 
-## 📁 Structure attendue
+### Étape 7 : Rapport d’analyse
+
+Produisez un fichier `resultats.md` synthétisant :
+
+- Les métriques mises en évidence (trafic, erreurs, performances).
+- Les anomalies ou pics suspects détectés.
+- Les recommandations (ex : alertes à mettre en place, endpoints à optimiser).
+- Des captures d’écran annotées de vos visualisations.
+
+## Structure attendue
 
 ```
 exercice-03/
@@ -204,7 +229,7 @@ exercice-03/
         └── requetes_elasticsearch.md
 ```
 
-## ✅ Critères d'évaluation
+## Critères d'évaluation
 
 - [ ] ELK Stack installé et fonctionnel
 - [ ] Logstash ingère les données
@@ -213,7 +238,7 @@ exercice-03/
 - [ ] Dashboard fonctionnel
 - [ ] Documentation complète
 
-## 💡 Conseils
+## Conseils pratiques
 
 - Commencez avec peu de données pour tester
 - Utilisez Dev Tools pour tester les requêtes
@@ -221,20 +246,20 @@ exercice-03/
 - Utilisez les filtres pour affiner vos analyses
 - Documentez vos requêtes Elasticsearch
 
-## 📚 Ressources
+## Ressources
 
 - Documentation ELK : https://www.elastic.co/guide/
 - Guide Kibana : https://www.elastic.co/guide/en/kibana/current/index.html
 - Guide Logstash : https://www.elastic.co/guide/en/logstash/current/index.html
 
-## 🆘 Aide
+## Aide
 
 Si vous êtes bloqué :
 1. Vérifiez les logs des containers Docker
 2. Consultez la documentation officielle
 3. Ouvrez une issue sur le dépôt GitHub
 
-## 📤 Comment soumettre votre solution
+## Comment soumettre votre solution
 
 ### Étapes pour pousser votre exercice sur GitHub
 

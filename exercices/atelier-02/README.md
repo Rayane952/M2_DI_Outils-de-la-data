@@ -1,149 +1,397 @@
-# Atelier 02 : Machine Learning Pipeline
+# Atelier 02 : Pipeline Machine Learning complet
 
-## 🎯 Objectifs
+## Objectifs pédagogiques
 
-- Construire un pipeline ML complet
-- Préparer les données pour le ML
-- Entraîner et évaluer des modèles
-- Déployer un modèle en production
+1. Construire un pipeline ML de bout en bout (de la donnée au déploiement).
+2. Préparer les données pour le machine learning (feature engineering).
+3. Entraîner, évaluer et comparer plusieurs modèles.
+4. Déployer un modèle en production via une API REST.
+5. Documenter la méthodologie et les performances dans `resultats.md`.
 
-## 📋 Prérequis
+## Contexte
+
+Vous êtes Data Scientist pour une entreprise e-commerce. Vous devez créer un système de prédiction pour un problème métier concret parmi :
+
+- Prédiction de churn client.
+- Prévision de ventes.
+- Classification de produits (catégorisation automatique).
+- Détection de fraude.
+- Recommandation de produits.
+
+Livrable attendu : un pipeline ML complet avec API de prédiction déployée.
+
+## Prérequis
 
 - Python 3.8+
-- Bibliothèques : pandas, scikit-learn, xgboost, matplotlib, joblib
-- Connaissances en machine learning
+- Bibliothèques : pandas, scikit-learn, xgboost, matplotlib, joblib, flask/fastapi
+- Connaissances en machine learning (supervisé)
+- Compréhension des métriques d'évaluation
 
-## 📦 Installation
+## Installation
 
 ```bash
-pip install pandas scikit-learn xgboost matplotlib seaborn joblib
+pip install pandas scikit-learn xgboost matplotlib seaborn joblib flask fastapi uvicorn
 ```
 
-## 🎓 Instructions
+## Étapes guidées
 
-### Contexte
+### Phase 1 : Définition du problème
 
-Vous devez créer un système de prédiction pour un problème métier (ex: prédiction de churn, prévision de ventes, classification de produits, etc.).
+#### Étape 1.1 : Choix du problème métier
+Sélectionnez un problème concret et documentez :
+- Variable cible (target) : qu'est-ce qu'on prédit ?
+- Métriques de succès : accuracy, precision, recall, F1, ROC-AUC, RMSE, MAE ?
+- Impact métier : pourquoi ce problème est important ?
 
-### Phase 1 : Définition du problème (1h)
+#### Étape 1.2 : Collecte de données
+```bash
+# Option 1 : Utiliser un dataset public
+# Kaggle : https://www.kaggle.com/datasets
+# UCI ML Repository : https://archive.ics.uci.edu/
 
-1. **Choix du problème** :
-   - Sélectionnez un problème métier concret
-   - Définissez la variable cible
-   - Identifiez les métriques de succès
+# Option 2 : Créer un dataset synthétique réaliste
+cd atelier-02
+python generer_donnees_ml.py
+```
 
-2. **Collecte de données** :
-   - Utilisez un dataset public (Kaggle, UCI, etc.)
-   - Ou créez un dataset synthétique réaliste
-   - Documentez la source des données
+Documentez la source des données dans `donnees/README.md`.
 
-### Phase 2 : Exploration et préparation (3h)
+### Phase 2 : Exploration et préparation
 
-1. **EDA approfondie** :
-   - Analyse univariée et multivariée
-   - Détection des outliers
-   - Analyse des corrélations
-   - Visualisations exploratoires
+#### Étape 2.1 : EDA approfondie
+Créez `notebooks/01_exploration.ipynb` :
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-2. **Feature Engineering** :
-   - Création de nouvelles features
-   - Encodage des variables catégorielles
-   - Normalisation/standardisation
-   - Gestion des valeurs manquantes
+df = pd.read_csv("donnees/raw/dataset.csv")
 
-3. **Sélection de features** :
-   - Analyse de l'importance des features
-   - Sélection des features pertinentes
-   - Réduction de dimensionnalité (si nécessaire)
+# Analyse univariée
+print(df.describe())
+df.hist(figsize=(15, 10))
+plt.show()
 
-### Phase 3 : Modélisation (4h)
+# Analyse multivariée
+sns.pairplot(df, hue='target')
+plt.show()
 
-1. **Baseline** :
-   - Implémentez un modèle simple (régression linéaire, arbre de décision)
-   - Établissez une baseline de performance
+# Détection des outliers
+Q1 = df.quantile(0.25)
+Q3 = df.quantile(0.75)
+IQR = Q3 - Q1
+outliers = df[((df < (Q1 - 1.5 * IQR)) | (df > (Q3 + 1.5 * IQR))).any(axis=1)]
+print(f"Nombre d'outliers : {len(outliers)}")
 
-2. **Modèles multiples** :
-   - Testez au moins 3 algorithmes différents :
-     * Modèle linéaire (Logistic Regression, Linear Regression)
-     * Modèle d'ensemble (Random Forest, XGBoost)
-     * Modèle avancé (SVM, Neural Network si temps)
+# Analyse des corrélations
+corr_matrix = df.corr()
+sns.heatmap(corr_matrix, annot=True)
+plt.show()
+```
 
-3. **Optimisation** :
-   - Hyperparameter tuning (GridSearch/RandomSearch)
-   - Validation croisée
-   - Optimisation des métriques
+#### Étape 2.2 : Feature Engineering
+Créez `src/feature_engineering.py` :
+```python
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
-### Phase 4 : Évaluation et sélection (2h)
+def creer_features(df):
+    """Crée de nouvelles features"""
+    # Features temporelles
+    if 'date' in df.columns:
+        df['annee'] = pd.to_datetime(df['date']).dt.year
+        df['mois'] = pd.to_datetime(df['date']).dt.month
+        df['jour_semaine'] = pd.to_datetime(df['date']).dt.dayofweek
+    
+    # Features d'interaction
+    if 'montant' in df.columns and 'quantite' in df.columns:
+        df['montant_par_unite'] = df['montant'] / df['quantite']
+    
+    # Features agrégées
+    if 'client_id' in df.columns:
+        df['nb_commandes_client'] = df.groupby('client_id')['commande_id'].transform('count')
+        df['ca_total_client'] = df.groupby('client_id')['montant'].transform('sum')
+    
+    return df
 
-1. **Évaluation rigoureuse** :
-   - Métriques appropriées (accuracy, precision, recall, F1, ROC-AUC, etc.)
-   - Validation sur ensemble de test
-   - Analyse des erreurs
+def encoder_variables(df, colonnes_categorielles):
+    """Encode les variables catégorielles"""
+    le = LabelEncoder()
+    for col in colonnes_categorielles:
+        if col in df.columns:
+            df[f'{col}_encoded'] = le.fit_transform(df[col])
+    return df
 
-2. **Interprétabilité** :
-   - Feature importance
-   - SHAP values (si possible)
-   - Visualisation des décisions du modèle
+def normaliser_variables(df, colonnes_numeriques):
+    """Normalise les variables numériques"""
+    scaler = StandardScaler()
+    df[colonnes_numeriques] = scaler.fit_transform(df[colonnes_numeriques])
+    return df, scaler
+```
 
-3. **Sélection du meilleur modèle** :
-   - Comparaison des modèles
-   - Justification du choix
-   - Analyse des trade-offs
+#### Étape 2.3 : Gestion des valeurs manquantes
+```python
+# Stratégies selon le type de variable
+df['col_num'].fillna(df['col_num'].median(), inplace=True)
+df['col_cat'].fillna(df['col_cat'].mode()[0], inplace=True)
+```
 
-### Phase 5 : Pipeline de production (3h)
+#### Étape 2.4 : Sélection de features
+```python
+from sklearn.feature_selection import SelectKBest, f_classif
 
-1. **Création du pipeline** :
-   - Pipeline de preprocessing
-   - Pipeline d'entraînement
-   - Pipeline de prédiction
-   - Utilisez sklearn.pipeline
+selector = SelectKBest(f_classif, k=10)
+X_selected = selector.fit_transform(X, y)
+selected_features = X.columns[selector.get_support()]
+```
 
-2. **Sauvegarde et chargement** :
-   - Sauvegardez le modèle entraîné (joblib/pickle)
-   - Créez une fonction de chargement
-   - Versioning du modèle
+### Phase 3 : Modélisation
 
-3. **API de prédiction** :
-   - Créez une API REST (Flask/FastAPI)
-   - Endpoint de prédiction
-   - Validation des inputs
-   - Gestion d'erreurs
+#### Étape 3.1 : Baseline
+Créez `src/models/baseline.py` :
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
 
-4. **Tests** :
-   - Tests unitaires du pipeline
-   - Tests d'intégration de l'API
-   - Tests de performance
+# Modèle baseline simple
+baseline = LogisticRegression()
+baseline.fit(X_train, y_train)
+y_pred = baseline.predict(X_test)
 
-### Phase 6 : Documentation et déploiement (2h)
+print(f"Accuracy baseline : {accuracy_score(y_test, y_pred):.4f}")
+print(classification_report(y_test, y_pred))
+```
 
-1. **Documentation** :
-   - Documentation du modèle (méthodologie, performances)
-   - Guide d'utilisation de l'API
-   - README complet
+#### Étape 3.2 : Modèles multiples
+Créez `src/models/train.py` :
+```python
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+import xgboost as xgb
+from sklearn.model_selection import cross_val_score
 
-2. **Déploiement** (optionnel) :
-   - Containerisation (Docker)
-   - Déploiement local ou cloud
-   - Monitoring basique
+models = {
+    'Logistic Regression': LogisticRegression(),
+    'Random Forest': RandomForestClassifier(n_estimators=100),
+    'XGBoost': xgb.XGBClassifier(),
+    'SVM': SVC(probability=True)
+}
 
-## 📁 Structure attendue
+results = {}
+for name, model in models.items():
+    scores = cross_val_score(model, X_train, y_train, cv=5, scoring='accuracy')
+    results[name] = {
+        'mean': scores.mean(),
+        'std': scores.std()
+    }
+    print(f"{name}: {scores.mean():.4f} (+/- {scores.std():.4f})")
+```
 
+#### Étape 3.3 : Optimisation des hyperparamètres
+```python
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'n_estimators': [100, 200, 300],
+    'max_depth': [3, 5, 7],
+    'learning_rate': [0.01, 0.1, 0.2]
+}
+
+grid_search = GridSearchCV(
+    xgb.XGBClassifier(),
+    param_grid,
+    cv=5,
+    scoring='roc_auc',
+    n_jobs=-1
+)
+
+grid_search.fit(X_train, y_train)
+print(f"Meilleurs paramètres : {grid_search.best_params_}")
+print(f"Meilleur score : {grid_search.best_score_:.4f}")
+```
+
+### Phase 4 : Évaluation et sélection
+
+#### Étape 4.1 : Évaluation rigoureuse
+Créez `src/models/evaluate.py` :
+```python
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, 
+    f1_score, roc_auc_score, confusion_matrix
+)
+
+def evaluer_modele(model, X_test, y_test):
+    """Évalue un modèle avec plusieurs métriques"""
+    y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)[:, 1]
+    
+    metrics = {
+        'accuracy': accuracy_score(y_test, y_pred),
+        'precision': precision_score(y_test, y_pred),
+        'recall': recall_score(y_test, y_pred),
+        'f1': f1_score(y_test, y_pred),
+        'roc_auc': roc_auc_score(y_test, y_pred_proba)
+    }
+    
+    print("Métriques d'évaluation :")
+    for metric, value in metrics.items():
+        print(f"  {metric}: {value:.4f}")
+    
+    print("\nMatrice de confusion :")
+    print(confusion_matrix(y_test, y_pred))
+    
+    return metrics
+```
+
+#### Étape 4.2 : Interprétabilité
+```python
+import shap
+
+# Feature importance
+feature_importance = model.feature_importances_
+feature_names = X.columns
+importance_df = pd.DataFrame({
+    'feature': feature_names,
+    'importance': feature_importance
+}).sort_values('importance', ascending=False)
+
+# SHAP values (si XGBoost)
+explainer = shap.TreeExplainer(model)
+shap_values = explainer.shap_values(X_test)
+shap.summary_plot(shap_values, X_test)
+```
+
+### Phase 5 : Pipeline de production
+
+#### Étape 5.1 : Créer le pipeline
+Créez `src/pipeline.py` :
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('classifier', RandomForestClassifier(n_estimators=100))
+])
+
+pipeline.fit(X_train, y_train)
+```
+
+#### Étape 5.2 : Sauvegarder le modèle
+```python
+import joblib
+
+joblib.dump(pipeline, 'models/pipeline_v1.pkl')
+joblib.dump(scaler, 'models/scaler_v1.pkl')
+```
+
+#### Étape 5.3 : API de prédiction
+Créez `src/api/app.py` (Flask) :
+```python
+from flask import Flask, request, jsonify
+import joblib
+import pandas as pd
+
+app = Flask(__name__)
+model = joblib.load('models/pipeline_v1.pkl')
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.json
+    df = pd.DataFrame([data])
+    prediction = model.predict(df)[0]
+    probability = model.predict_proba(df)[0]
+    
+    return jsonify({
+        'prediction': int(prediction),
+        'probability': float(max(probability))
+    })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+```
+
+Ou avec FastAPI :
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+import joblib
+import pandas as pd
+
+app = FastAPI()
+model = joblib.load('models/pipeline_v1.pkl')
+
+class PredictionRequest(BaseModel):
+    feature1: float
+    feature2: float
+    # ... autres features
+
+@app.post('/predict')
+def predict(request: PredictionRequest):
+    df = pd.DataFrame([request.dict()])
+    prediction = model.predict(df)[0]
+    return {'prediction': int(prediction)}
+```
+
+#### Étape 5.4 : Tests
+Créez `tests/test_pipeline.py` :
+```python
+import unittest
+from src.pipeline import pipeline
+from src.api.app import app
+
+class TestPipeline(unittest.TestCase):
+    def test_prediction(self):
+        # Test de prédiction
+        result = pipeline.predict(X_test[:1])
+        self.assertIsNotNone(result)
+    
+    def test_api(self):
+        # Test de l'API
+        with app.test_client() as client:
+            response = client.post('/predict', json={'feature1': 1.0, 'feature2': 2.0})
+            self.assertEqual(response.status_code, 200)
+```
+
+### Phase 6 : Documentation et déploiement
+
+#### Étape 6.1 : Documentation
+Créez `documentation/README.md` avec :
+- Méthodologie détaillée.
+- Performances du modèle (métriques).
+- Guide d'utilisation de l'API.
+- Limitations et améliorations futures.
+
+#### Étape 6.2 : Déploiement (optionnel)
+```dockerfile
+# Dockerfile
+FROM python:3.9
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "src/api/app.py"]
+```
+
+## Structure attendue
 ```
 atelier-02/
-├── README.md (ce fichier)
+├── README.md
 ├── donnees/
-│   ├── raw/ (données brutes)
-│   └── processed/ (données préparées)
+│   ├── raw/
+│   └── processed/
 ├── notebooks/
 │   ├── 01_exploration.ipynb
 │   ├── 02_feature_engineering.ipynb
 │   └── 03_modeling.ipynb
 ├── src/
-│   ├── data_preparation.py
 │   ├── feature_engineering.py
+│   ├── pipeline.py
 │   ├── models/
 │   │   ├── train.py
-│   │   └── predict.py
+│   │   └── evaluate.py
 │   └── api/
 │       └── app.py
 ├── models/
@@ -155,60 +403,37 @@ atelier-02/
         └── (votre solution complète)
 ```
 
-## ✅ Critères d'évaluation
+## Critères d'évaluation
+- Pipeline ML complet et fonctionnel de bout en bout
+- Feature engineering pertinent et documenté
+- Modèles bien entraînés, évalués et comparés
+- Code propre, modulaire et testé
+- API fonctionnelle avec validation des inputs
+- Documentation complète (méthodologie + performances)
+- Performance du modèle justifiée avec métriques appropriées
 
-- [ ] Pipeline ML complet et fonctionnel
-- [ ] Feature engineering pertinent
-- [ ] Modèles bien entraînés et évalués
-- [ ] Code propre et modulaire
-- [ ] API fonctionnelle
-- [ ] Documentation complète
-- [ ] Performance du modèle justifiée
-
-## 💡 Conseils
-
+## Conseils
 - Commencez simple, complexifiez progressivement
-- Documentez chaque étape
-- Visualisez vos résultats
-- Testez sur différents datasets
-- Pensez à la production dès le début
-- Validez avec des métriques métier
+- Documentez chaque étape (choix, résultats)
+- Visualisez vos résultats (métriques, features importance)
+- Testez sur différents datasets (train/validation/test)
+- Pensez à la production dès le début (pipeline, API)
+- Validez avec des métriques métier (pas seulement techniques)
 
-## 🚀 Fonctionnalités avancées (Bonus)
-
+## Fonctionnalités avancées (Bonus)
 - AutoML (Auto-sklearn, TPOT)
 - Deep Learning (TensorFlow/PyTorch)
 - A/B testing du modèle
-- Monitoring en production (MLflow)
+- Monitoring en production (MLflow, Weights & Biases)
 - Retraining automatique
 - Explicabilité avancée (LIME, SHAP)
 
-## 📤 Comment soumettre votre solution
-
-### Étapes pour pousser votre atelier sur GitHub
-
-1. **Créez votre dossier de solution** :
-   ```bash
-   cd atelier-02
-   mkdir -p solutions/votre-nom
-   cd solutions/votre-nom
-   ```
-
-2. **Placez tous vos fichiers** dans ce dossier :
-   - Tous vos fichiers de code
-   - Votre documentation
-   - Tous les fichiers générés
-
-3. **Ajoutez et commitez** :
-   ```bash
-   git add solutions/votre-nom/
-   git commit -m "Atelier 02 - Votre Nom"
-   git push origin main
-   ```
-
-4. **Créez une Pull Request** si vous avez forké le dépôt.
-
-**Important** : N'oubliez pas de remplacer "votre-nom" par votre vrai nom ! dans le README principal du dépôt pour soumettre votre solution.
-
-
-
+## Soumission
+```bash
+mkdir -p solutions/votre-nom
+# Placez tous vos fichiers dans ce dossier
+git add solutions/votre-nom/
+git commit -m "Atelier 02 - Votre Nom"
+git push origin main
+```
+Remplacez `votre-nom` par vos nom/prénom.

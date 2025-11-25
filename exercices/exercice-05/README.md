@@ -1,21 +1,30 @@
 # Exercice 05 : Grafana + Prometheus - Monitoring complet
 
-## 🎯 Objectifs
+## Objectifs pédagogiques
 
-- Installer Grafana et Prometheus
-- Configurer Prometheus pour collecter des métriques
-- Créer des dashboards Grafana professionnels
-- Configurer des alertes
-- Maîtriser un stack de monitoring complet
+1. Concevoir un stack de supervision open source prêt pour la production.
+2. Collecter et explorer des métriques système (CPU, mémoire, réseau, RPS).
+3. Créer un dashboard Grafana opérationnel avec filtres, variables et panels variés.
+4. Configurer des alertes fiables pour prévenir les incidents.
+5. Documenter vos choix (PromQL, structure du dashboard, plan d’alerte).
 
-## 📋 Prérequis
+## Contexte métier
 
-- Docker et Docker Compose
-- 2GB RAM minimum
+Vous gérez la plateforme d’une API critique. Les incidents des dernières semaines demandent un monitoring fiable pour :
 
-## 📦 Installation
+- Identifier rapidement les pics de charge.
+- Isoler les serveurs défaillants.
+- Surveiller les latences et les erreurs applicatives.
+- Prévenir les équipes (Slack/mail) lorsque les seuils sont dépassés.
 
-### Avec Docker Compose
+## Prérequis techniques
+
+- Docker + Docker Compose installés.
+- Port 3000 (Grafana) et 9090 (Prometheus) libres.
+- 2 Go de RAM disponibles.
+- Connaissances de base en PromQL recommandées.
+
+## Installation
 
 Créez un fichier `docker-compose.yml` :
 
@@ -43,25 +52,24 @@ services:
     depends_on:
       - prometheus
 
-volumes:
-  prometheus_data:
-  grafana_data:
-```
+## Données et exporter custom
 
-## 📊 Données
-
-1. **Générez les métriques** :
+1. **Générez des métriques synthétiques** :
    ```bash
    cd exercice-05
    python generer_metriques.py
    ```
+   Ce script crée `donnees/metriques.csv` (base historique).
 
-2. **Créez un exporter simple** pour simuler des métriques :
+2. **Lancez l’exporter HTTP** (faux service exposant les métriques en temps réel) :
    ```bash
    python exporter_metriques.py
    ```
+   L’exporter écoute sur `http://localhost:8000/metrics` et expose les séries `app_cpu_usage`, `app_memory_usage`, etc.
 
-## 🎓 Instructions
+3. **Ajoutez ce target dans `prometheus.yml`** (déjà prévu dans la configuration ci-dessus).
+
+## Plan de travail
 
 ### Étape 1 : Configuration Prometheus
 
@@ -103,12 +111,17 @@ docker-compose up -d
 
 Créez au moins 6 panneaux :
 
-1. **Time Series** : CPU par serveur
-2. **Gauge** : Utilisation mémoire
-3. **Bar Chart** : Top serveurs par charge
-4. **Stat** : Nombre total de requêtes
-5. **Heatmap** : Distribution des latences
-6. **Table** : Métriques par serveur
+1. **Time Series** : Utilisation CPU par serveur (moyenne sur 5 min).
+2. **Gauge** : Mémoire disponible avec seuils visuels.
+3. **Bar Chart** : Top serveurs par charge moyenne sur 1h.
+4. **Stat** : Nombre total de requêtes par minute.
+5. **Heatmap** : Distribution des latences (p95, p99).
+6. **Table** : Synthèse par serveur (CPU, mémoire, réseau, état).
+
+Ajoutez également :
+7. **Panel “Erreurs”** : courbe du taux de requêtes 5xx.
+8. **Panel “Alert status”** : affichage des alertes actives.
+9. **Panel “Annotations”** : événements clés (deploy, incidents).
 
 ### Étape 6 : Alertes
 
@@ -117,9 +130,17 @@ Créez au moins 6 panneaux :
    - Mémoire < 10%
    - Disque > 90%
 
-2. **Configurez les notifications**
+2. **Configurez les notifications** (Alertmanager ou intégration Slack/email).
 
-## 📁 Structure attendue
+### Étape 7 : Documentation
+
+Dans `resultats.md`, décrivez :
+- Votre architecture (schéma rapide).
+- Le détail des panels clés (PromQL, interprétation).
+- Les alertes mises en place et leur logique.
+- Les risques détectés dans les données simulées.
+
+## Structure attendue
 
 ```
 exercice-05/
@@ -135,7 +156,7 @@ exercice-05/
         └── resultats.md
 ```
 
-## ✅ Critères d'évaluation
+## Critères d'évaluation
 
 - [ ] Prometheus et Grafana installés
 - [ ] Métriques collectées
@@ -144,27 +165,27 @@ exercice-05/
 - [ ] Dashboard exporté
 - [ ] Documentation complète
 
-## 💡 Conseils
+## Conseils
 
 - Utilisez les variables de dashboard
 - Organisez les panneaux par catégorie
 - Testez les alertes
 - Documentez vos requêtes PromQL
 
-## 📚 Ressources
+## Ressources
 
 - Documentation Grafana : https://grafana.com/docs/
 - Documentation Prometheus : https://prometheus.io/docs/
 - PromQL : https://prometheus.io/docs/prometheus/latest/querying/basics/
 
-## 🆘 Aide
+## Aide
 
 Si vous êtes bloqué :
 1. Vérifiez les logs Docker
 2. Consultez la documentation
 3. Ouvrez une issue sur le dépôt GitHub
 
-## 📤 Comment soumettre votre solution
+## Comment soumettre votre solution
 
 ### Étapes pour pousser votre exercice sur GitHub
 

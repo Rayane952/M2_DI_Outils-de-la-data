@@ -1,243 +1,111 @@
-# Exercice 01 : Apache Superset - Business Intelligence Open Source
+# Exercice 01 : Apache Superset – Tableau de bord ventes
 
-## 🎯 Objectifs
+## Objectifs pédagogiques
 
-- Installer et configurer Apache Superset
-- Créer des visualisations interactives
-- Construire des dashboards professionnels
-- Maîtriser un outil BI open source populaire
+1. Installer Superset et connecter une base SQLite locale.
+2. Construire un dataset propre à partir des ventes e-commerce 2024.
+3. Concevoir un dashboard lisible et filtrable pour les équipes métier.
+4. Documenter les enseignements clés dans `resultats.md`.
 
-## 📋 Prérequis
+## Contexte
 
-- Python 3.8+
-- Docker (recommandé) ou installation native
-- Connaissances de base en SQL
+Vous êtes analyste BI pour une boutique en ligne. Le marketing veut suivre :
 
-## 📦 Installation
+- Le chiffre d’affaires mensuel.
+- Les meilleures catégories/produits.
+- Les clients les plus actifs.
 
-### Option 1 : Avec Docker (Recommandé - Plus simple)
+Livrable attendu : un dashboard « Analyse des ventes » autonome.
+
+## Préparation des données
 
 ```bash
-# Télécharger et lancer Superset
+cd exercice-01
+python generer_donnees.py          # génère donnees/ventes.csv
+python creer_base_donnees.py       # crée donnees/ventes.db
+```
+
+## Installation rapide de Superset
+
+### Via Docker (recommandé)
+```bash
 docker run -d -p 8088:8088 --name superset apache/superset
-
-# Initialiser la base de données
 docker exec -it superset superset db upgrade
-
-# Créer un utilisateur admin
-docker exec -it superset superset fab create-admin \
-  --username admin \
-  --firstname Admin \
-  --lastname User \
-  --email admin@example.com \
-  --password admin
-
-# Initialiser Superset
+docker exec -it superset superset fab create-admin   --username admin --firstname Admin --lastname User   --email admin@example.com --password admin
 docker exec -it superset superset init
-
-# Accéder à Superset : http://localhost:8088
 ```
+Connexion : http://localhost:8088 (admin/admin).
 
-### Option 2 : Installation native
+### Installation native
+Voir https://superset.apache.org/docs/installation si vous préférez éviter Docker.
 
-```bash
-# Créer un environnement virtuel
-python -m venv superset-env
-source superset-env/bin/activate  # Linux/Mac
-# ou superset-env\Scripts\activate  # Windows
+## Étapes guidées
 
-# Installer Superset
-pip install apache-superset
+### 1. Connexion à la base
+- Data > Databases > +Database
+- SQLAlchemy URI : `sqlite:///donnees/ventes.db`
+- Test Connection → Save
 
-# Initialiser la base de données
-superset db upgrade
+### 2. Création du dataset
+- Data > Datasets > +Dataset → table `ventes`
+- Vérifier les types (date, montants, quantités)
+- Ajouter si besoin une colonne calculée (`quantite * prix_unitaire`)
 
-# Créer un utilisateur admin
-export FLASK_APP=superset
-superset fab create-admin
+### 3. Charts requis
+1. CA par mois (bar chart)
+2. Évolution des ventes (line chart)
+3. Répartition CA par catégorie (pie ou sunburst)
+4. Top 10 produits (table triée)
+5. Activité par client (bar horizontale)
+6. Cartouche d’indicateurs (CA total, panier moyen, nombre de transactions)
 
-# Initialiser Superset
-superset init
+### 4. Dashboard « Analyse des ventes »
+- Créer un dashboard, ajouter tous les charts
+- Organiser en colonnes : Vue d’ensemble / Produits / Clients
+- Ajouter deux filtres liés : période + catégorie
+- Tester un scénario (ex : mois d’avril, catégorie Electronique)
 
-# Démarrer Superset
-superset run -p 8088 --with-threads --reload --debugger
-```
+### 5. Livrables
+Dans `solutions/votre-nom/` :
+- `dashboard_export.json`
+- `screenshots/` (captures annotées)
+- `resultats.md` : insights, anomalies, recommandations
+- `requetes_sql.md` si SQL Lab est utilisé
 
-## 📊 Données
-
-1. **Générez les données** :
-   ```bash
-   cd exercice-01
-   python generer_donnees.py
-   ```
-
-2. **Créez une base de données SQLite** avec les données :
-   ```bash
-   python creer_base_donnees.py
-   ```
-
-## 🎓 Instructions
-
-### Étape 1 : Configuration initiale
-
-1. **Accédez à Superset** : http://localhost:8088
-2. **Connectez-vous** avec les identifiants créés (admin/admin par défaut)
-3. **Explorez l'interface** :
-   - Datasets : Sources de données
-   - Charts : Visualisations
-   - Dashboards : Tableaux de bord
-
-### Étape 2 : Connexion à la base de données
-
-1. **Allez dans Data > Databases**
-2. **Cliquez sur "+ Database"**
-3. **Configurez la connexion SQLite** :
-   - Database Name : `Ventes E-commerce`
-   - SQLAlchemy URI : `sqlite:///donnees/ventes.db`
-   - Cliquez sur "Test Connection"
-   - Sauvegardez
-
-### Étape 3 : Créer un Dataset
-
-1. **Allez dans Data > Datasets**
-2. **Cliquez sur "+ Dataset"**
-3. **Sélectionnez votre base de données** et la table `ventes`
-4. **Nommez le dataset** : "Ventes"
-5. **Explorez les colonnes** et leurs types
-
-### Étape 4 : Créer des visualisations
-
-Créez au moins 5 visualisations différentes :
-
-1. **Graphique en barres** : Chiffre d'affaires par mois
-   - Type : Bar Chart
-   - X-axis : `date` (groupé par mois)
-   - Y-axis : `montant_total` (SUM)
-
-2. **Graphique en camembert** : Répartition par catégorie
-   - Type : Pie Chart
-   - Dimension : `categorie`
-   - Metric : `montant_total` (SUM)
-
-3. **Graphique de ligne** : Évolution des ventes dans le temps
-   - Type : Line Chart
-   - X-axis : `date`
-   - Y-axis : `montant_total` (SUM)
-
-4. **Table** : Top 10 produits
-   - Type : Table View
-   - Colonnes : `produit`, `quantite` (SUM), `montant_total` (SUM)
-   - Trier par `montant_total` DESC
-   - Limite : 10
-
-5. **Graphique en barres empilées** : Ventes par catégorie et mois
-   - Type : Stacked Bar Chart
-   - X-axis : `date` (par mois)
-   - Y-axis : `montant_total` (SUM)
-   - Stack : `categorie`
-
-### Étape 5 : Créer un Dashboard
-
-1. **Allez dans Dashboards**
-2. **Créez un nouveau dashboard** : "Analyse des Ventes"
-3. **Ajoutez vos visualisations** :
-   - Glissez-déposez vos charts
-   - Organisez-les de manière logique
-   - Ajustez les tailles
-
-4. **Configurez les filtres** :
-   - Ajoutez un filtre par date
-   - Ajoutez un filtre par catégorie
-   - Testez les filtres
-
-### Étape 6 : Fonctionnalités avancées
-
-1. **Créer des métriques personnalisées** :
-   - Panier moyen
-   - Taux de croissance
-   - Pourcentages
-
-2. **Utiliser SQL Lab** :
-   - Créez des requêtes SQL complexes
-   - Visualisez les résultats
-   - Sauvegardez comme dataset
-
-3. **Partager le dashboard** :
-   - Exportez le dashboard en JSON
-   - Documentez votre travail
-
-## 📁 Structure attendue
-
+## Structure attendue
 ```
 exercice-01/
-├── README.md (ce fichier)
+├── README.md
 ├── donnees/
 │   ├── ventes.csv
-│   └── ventes.db (créé)
-├── solutions/
-│   └── votre-nom/
-│       ├── dashboard_export.json
-│       ├── screenshots/ (captures d'écran)
-│       ├── resultats.md
-│       └── requetes_sql.md (si applicable)
+│   └── ventes.db
+└── solutions/
+    └── votre-nom/
+        ├── dashboard_export.json
+        ├── screenshots/
+        ├── resultats.md
+        └── requetes_sql.md
 ```
 
-## ✅ Critères d'évaluation
+## Critères d’évaluation
+- Superset installé et accessible
+- Dataset opérationnel
+- Dashboard complet et filtrable
+- Documentation livrée (export + captures + rapport)
+- Respect de la structure de soumission
 
-- [ ] Superset installé et configuré
-- [ ] Base de données connectée
-- [ ] Au moins 5 visualisations créées
-- [ ] Dashboard fonctionnel avec filtres
-- [ ] Documentation complète avec captures d'écran
-- [ ] Export du dashboard en JSON
+## Conseils
+- Sauvegardez chaque chart avant de quitter Explore.
+- Utilisez le Time range pour grouper par mois.
+- Donnez des titres explicites aux panels.
+- Mentionnez vos métriques dans `resultats.md`.
 
-## 💡 Conseils
-
-- Utilisez SQL Lab pour des requêtes complexes
-- Testez différents types de visualisations
-- Organisez votre dashboard de manière logique
-- Utilisez les couleurs de manière cohérente
-- Documentez vos métriques personnalisées
-
-## 📚 Ressources
-
-- Documentation Superset : https://superset.apache.org/docs/
-- Tutoriels : https://superset.apache.org/docs/intro
-- Exemples de dashboards : https://github.com/apache/superset
-
-## 🆘 Aide
-
-Si vous êtes bloqué :
-1. Consultez la documentation officielle
-2. Regardez les tutoriels vidéo
-3. Ouvrez une issue sur le dépôt GitHub
-
-## 📤 Comment soumettre votre solution
-
-### Étapes pour pousser votre exercice sur GitHub
-
-1. **Générez les données** :
-   ```bash
-   cd exercice-01
-   python generer_donnees.py
-   python creer_base_donnees.py
-   ```
-
-2. **Créez votre dossier de solution** :
-   ```bash
-   mkdir -p solutions/votre-nom
-   cd solutions/votre-nom
-   ```
-
-3. **Exportez votre dashboard** depuis Superset (JSON)
-4. **Prenez des captures d'écran** de vos visualisations
-5. **Créez un fichier `resultats.md`** avec vos analyses
-
-6. **Ajoutez et commitez** :
-   ```bash
-   git add solutions/votre-nom/
-   git commit -m "Solution exercice 01 - Votre Nom"
-   git push origin main
-   ```
-
-**Important** : N'oubliez pas de remplacer "votre-nom" par votre vrai nom !
+## Soumission
+```bash
+mkdir -p solutions/votre-nom
+# Déposer vos fichiers
+git add solutions/votre-nom/
+git commit -m "Solution exercice 01 - Votre Nom"
+git push origin main
+```
+Remplacez `votre-nom` par vos nom/prénom.

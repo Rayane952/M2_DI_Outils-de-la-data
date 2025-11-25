@@ -36,8 +36,8 @@ Les corrections de tous les exercices sont disponibles dans chaque dossier d'exe
 ## Disponibilité
 
 Les corrections sont disponibles pour :
-- ✅ Exercice 01 : Manipulation Pandas
-- ✅ Exercice 02 : Analyse SQL
+-  Exercice 01 : Manipulation Pandas
+-  Exercice 02 : Analyse SQL
 - ⏳ Exercice 03 : Pipeline ETL (à venir)
 - ⏳ Exercice 04 : Apache Spark (à venir)
 - ⏳ Exercice 05 : Grafana (à venir)

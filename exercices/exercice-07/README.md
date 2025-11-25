@@ -1,211 +1,388 @@
-# Exercice 07 : dbt (data build tool) - Transformation SQL
+# Exercice 07 : dbt (data build tool) – Transformation SQL moderne
 
-## 🎯 Objectifs
+## Objectifs pédagogiques
 
-- Installer et configurer dbt
-- Créer des modèles de transformation SQL
-- Implémenter des tests de qualité
-- Générer de la documentation automatique
-- Maîtriser la transformation de données moderne
+1. Installer dbt et configurer un projet.
+2. Créer des modèles de transformation SQL modulaires.
+3. Implémenter des tests de qualité des données.
+4. Générer de la documentation automatique.
+5. Documenter votre approche de transformation dans `resultats.md`.
 
-## 📋 Prérequis
+## Contexte
 
-- Python 3.8+
-- PostgreSQL ou SQLite installé
-- Connaissances SQL avancées
+Vous êtes Data Engineer pour une entreprise e-commerce. Vous devez transformer les données brutes de votre data warehouse en modèles analytiques exploitables pour :
 
-## 📦 Installation
+- Créer une table de faits `fct_ventes` consolidée.
+- Construire des dimensions (`dim_clients`, `dim_produits`, `dim_temps`).
+- Calculer des métriques business (CA, panier moyen, taux de conversion).
+- Assurer la qualité des données avec des tests automatisés.
+
+Livrable attendu : un projet dbt complet avec modèles, tests et documentation.
+
+## Préparation
+
+Utilisez la base de données de l'exercice 02 ou créez-en une nouvelle avec des tables sources.
+
+## Installation
 
 ```bash
-# Installer dbt (choisir selon votre base)
-pip install dbt-postgres  # Pour PostgreSQL
-# ou
-pip install dbt-sqlite    # Pour SQLite
+# Pour PostgreSQL
+pip install dbt-postgres
+
+# Pour SQLite
+pip install dbt-sqlite
 
 # Vérifier l'installation
 dbt --version
 ```
 
-## 📊 Données
+## Étapes guidées
 
-Utilisez la base de données de l'exercice 02 ou créez-en une nouvelle.
+### 1. Initialiser un projet dbt
+```bash
+dbt init m2_di_project
+cd m2_di_project
+```
 
-## 🎓 Instructions
+### 2. Configurer la connexion
+Éditez `~/.dbt/profiles.yml` (ou `profiles.yml` dans le projet) :
+```yaml
+m2_di_project:
+  outputs:
+    dev:
+      type: postgres  # ou sqlite
+      host: localhost
+      port: 5432
+      user: votre_user
+      password: votre_password
+      dbname: boutique
+      schema: public
+    prod:
+      type: postgres
+      # ... configuration production
+  target: dev
+```
 
-### Étape 1 : Configuration du projet
+### 3. Tester la connexion
+```bash
+dbt debug
+```
 
-1. **Initialiser un projet dbt** :
-   ```bash
-   dbt init m2_di_project
-   cd m2_di_project
-   ```
+### 4. Créer les sources (sources.yml)
+Créez `models/sources.yml` :
+```yaml
+version: 2
 
-2. **Configurer `profiles.yml`** dans `~/.dbt/profiles.yml` :
-   ```yaml
-   m2_di_project:
-     outputs:
-       dev:
-         type: postgres  # ou sqlite
-         host: localhost
-         user: votre_user
-         password: votre_password
-         port: 5432
-         dbname: m2_di_db
-         schema: public
-     target: dev
-   ```
+sources:
+  - name: raw_data
+    description: "Données brutes de la boutique"
+    database: boutique
+    schema: public
+    tables:
+      - name: clients
+        description: "Table des clients"
+      - name: produits
+        description: "Table des produits"
+      - name: commandes
+        description: "Table des commandes"
+      - name: details_commandes
+        description: "Détails des commandes"
+```
 
-3. **Tester la connexion** :
-   ```bash
-   dbt debug
-   ```
+### 5. Créer les modèles de transformation
 
-### Étape 2 : Modèles de base
+#### Modèle 1 : stg_clients.sql (staging)
+Créez `models/staging/stg_clients.sql` :
+```sql
+{{ config(materialized='view') }}
 
-Créez des modèles dans `models/` :
+select
+    client_id,
+    nom,
+    prenom,
+    email,
+    ville,
+    pays,
+    date_inscription
+from {{ source('raw_data', 'clients') }}
+```
 
-1. **Staging** (`models/staging/`) :
-   - `stg_customers.sql` : Nettoyage table clients
-   - `stg_orders.sql` : Nettoyage table commandes
-   - `stg_products.sql` : Nettoyage table produits
+#### Modèle 2 : stg_produits.sql
+Créez `models/staging/stg_produits.sql` :
+```sql
+{{ config(materialized='view') }}
 
-2. **Intermediate** (`models/intermediate/`) :
-   - `int_order_items.sql` : Jointure commandes et produits
-   - `int_customer_orders.sql` : Agrégation par client
+select
+    produit_id,
+    nom_produit,
+    categorie,
+    prix,
+    stock
+from {{ source('raw_data', 'produits') }}
+where prix > 0  -- Exclure les produits invalides
+```
 
-3. **Marts** (`models/marts/`) :
-   - `dim_customers.sql` : Dimension clients enrichie
-   - `dim_products.sql` : Dimension produits
-   - `fct_orders.sql` : Fait des commandes
+#### Modèle 3 : stg_commandes.sql
+Créez `models/staging/stg_commandes.sql` :
+```sql
+{{ config(materialized='view') }}
 
-### Étape 3 : Macros
+select
+    commande_id,
+    client_id,
+    date_commande,
+    montant_total,
+    statut
+from {{ source('raw_data', 'commandes') }}
+```
 
-Créez des macros réutilisables dans `macros/` :
+#### Modèle 4 : fct_ventes.sql (fait)
+Créez `models/marts/fct_ventes.sql` :
+```sql
+{{ config(materialized='table') }}
 
-1. **Macro pour formater les dates**
-2. **Macro pour calculer les pourcentages**
-3. **Macro pour les calculs de croissance**
+with commandes as (
+    select * from {{ ref('stg_commandes') }}
+),
+details as (
+    select
+        dc.commande_id,
+        dc.produit_id,
+        dc.quantite,
+        dc.prix_unitaire,
+        dc.quantite * dc.prix_unitaire as montant_ligne
+    from {{ source('raw_data', 'details_commandes') }} dc
+)
+select
+    c.commande_id,
+    c.client_id,
+    c.date_commande,
+    d.produit_id,
+    d.quantite,
+    d.montant_ligne,
+    c.montant_total as montant_commande_total
+from commandes c
+inner join details d on c.commande_id = d.commande_id
+```
 
-### Étape 4 : Tests
+#### Modèle 5 : dim_clients.sql (dimension)
+Créez `models/marts/dim_clients.sql` :
+```sql
+{{ config(materialized='table') }}
 
-1. **Tests de base** :
-   - `not_null` : Vérifier absence de valeurs nulles
-   - `unique` : Vérifier unicité
-   - `accepted_values` : Vérifier valeurs acceptées
-   - `relationships` : Vérifier relations
+select
+    client_id,
+    nom,
+    prenom,
+    email,
+    ville,
+    pays,
+    date_inscription,
+    current_date - date_inscription as anciennete_jours
+from {{ ref('stg_clients') }}
+```
 
-2. **Tests personnalisés** :
-   - Créez des tests SQL personnalisés
-   - Testez les règles métier
+#### Modèle 6 : dim_produits.sql
+Créez `models/marts/dim_produits.sql` :
+```sql
+{{ config(materialized='table') }}
 
-3. **Exécuter les tests** :
-   ```bash
-   dbt test
-   ```
+select
+    produit_id,
+    nom_produit,
+    categorie,
+    prix,
+    stock,
+    case
+        when prix < 50 then 'Economique'
+        when prix < 150 then 'Standard'
+        else 'Premium'
+    end as segment_prix
+from {{ ref('stg_produits') }}
+```
 
-### Étape 5 : Documentation
+#### Modèle 7 : métriques business (marts/business_metrics.sql)
+Créez `models/marts/business_metrics.sql` :
+```sql
+{{ config(materialized='table') }}
 
-1. **Documenter les modèles** :
-   - Ajoutez des descriptions
-   - Documentez les colonnes
-   - Ajoutez des exemples
+select
+    date_trunc('month', date_commande) as mois,
+    count(distinct client_id) as nb_clients_uniques,
+    count(distinct commande_id) as nb_commandes,
+    sum(montant_ligne) as ca_total,
+    avg(montant_commande_total) as panier_moyen,
+    sum(quantite) as quantite_totale_vendue
+from {{ ref('fct_ventes') }}
+group by 1
+order by 1 desc
+```
 
-2. **Générer la documentation** :
-   ```bash
-   dbt docs generate
-   dbt docs serve
-   ```
+### 6. Ajouter des tests de qualité
 
-### Étape 6 : Seeds et sources
+Créez `models/schema.yml` :
+```yaml
+version: 2
 
-1. **Créer des seeds** :
-   - Fichiers CSV de référence
-   - Charger avec `dbt seed`
+models:
+  - name: stg_clients
+    description: "Table staging des clients"
+    columns:
+      - name: client_id
+        description: "Identifiant unique du client"
+        tests:
+          - unique
+          - not_null
+      - name: email
+        tests:
+          - unique
+          - not_null
 
-2. **Définir des sources** :
-   - Définir les tables sources
-   - Documenter les sources
-   - Utiliser `source()` dans les modèles
+  - name: fct_ventes
+    description: "Table de faits des ventes"
+    columns:
+      - name: montant_ligne
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 10000
+      - name: quantite
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 100
 
-### Étape 7 : Pipeline complet
+sources:
+  - name: raw_data
+    tables:
+      - name: commandes
+        columns:
+          - name: montant_total
+            tests:
+              - not_null
+              - dbt_utils.accepted_range:
+                  min_value: 0
+```
 
-1. **Exécuter le pipeline** :
-   ```bash
-   dbt run
-   ```
+### 7. Exécuter les transformations
+```bash
+# Compiler les modèles (vérifier la syntaxe)
+dbt compile
 
-2. **Vérifier les résultats** dans la base de données
+# Exécuter tous les modèles
+dbt run
 
-## 📁 Structure attendue
+# Exécuter un modèle spécifique
+dbt run --select fct_ventes
 
+# Exécuter les tests
+dbt test
+
+# Exécuter un test spécifique
+dbt test --select stg_clients
+```
+
+### 8. Générer la documentation
+```bash
+# Générer la documentation
+dbt docs generate
+
+# Servir la documentation
+dbt docs serve
+```
+
+Accédez à http://localhost:8080 pour voir la documentation interactive.
+
+### 9. Utiliser des macros (optionnel)
+Créez `macros/calculer_taux_croissance.sql` :
+```sql
+{% macro calculer_taux_croissance(ca_actuel, ca_precedent) %}
+    case
+        when {{ ca_precedent }} = 0 then null
+        else (({{ ca_actuel }} - {{ ca_precedent }}) / {{ ca_precedent }}) * 100
+    end
+{% endmacro %}
+```
+
+Utilisez-la dans un modèle :
+```sql
+select
+    mois,
+    ca_total,
+    lag(ca_total) over (order by mois) as ca_mois_precedent,
+    {{ calculer_taux_croissance('ca_total', 'lag(ca_total) over (order by mois)') }} as taux_croissance
+from {{ ref('business_metrics') }}
+```
+
+### 10. Créer des seeds (données de référence)
+Créez `seeds/categories_prioritaires.csv` :
+```csv
+categorie,priorite
+Electronique,1
+Vetements,2
+Alimentaire,3
+```
+
+Chargez les seeds :
+```bash
+dbt seed
+```
+
+## Structure attendue
 ```
 exercice-07/
-├── README.md (ce fichier)
+├── README.md
 ├── m2_di_project/
-│   ├── dbt_project.yml
 │   ├── models/
 │   │   ├── staging/
-│   │   ├── intermediate/
-│   │   └── marts/
-│   ├── macros/
-│   ├── tests/
-│   └── seeds/
+│   │   │   ├── stg_clients.sql
+│   │   │   ├── stg_produits.sql
+│   │   │   └── stg_commandes.sql
+│   │   ├── marts/
+│   │   │   ├── fct_ventes.sql
+│   │   │   ├── dim_clients.sql
+│   │   │   ├── dim_produits.sql
+│   │   │   └── business_metrics.sql
+│   │   ├── sources.yml
+│   │   └── schema.yml
+│   ├── dbt_project.yml
+│   └── profiles.yml
 └── solutions/
     └── votre-nom/
-        ├── m2_di_project/ (votre projet)
-        └── resultats.md
+        ├── m2_di_project/
+        ├── screenshots/
+        ├── resultats.md
+        └── documentation.md
 ```
 
-## ✅ Critères d'évaluation
+## Critères d'évaluation
+- dbt installé et configuré
+- Projet dbt complet avec modèles staging et marts
+- Tests de qualité implémentés et passants
+- Documentation générée et accessible
+- Structure modulaire et réutilisable
+- Respect de la structure de soumission
 
-- [ ] Projet dbt configuré
-- [ ] Au moins 8 modèles créés
-- [ ] Macros réutilisables
-- [ ] Tests configurés et passés
-- [ ] Documentation complète
-- [ ] Pipeline fonctionnel
+## Conseils
+- Suivez la convention staging → marts pour organiser vos modèles
+- Utilisez les tests dbt pour garantir la qualité des données
+- Documentez vos modèles avec des descriptions claires
+- Utilisez les macros pour éviter la duplication de code
+- Organisez vos modèles par domaine métier
 
-## 💡 Conseils
-
-- Suivez les conventions dbt
-- Organisez en couches logiques
-- Testez régulièrement
-- Documentez au fur et à mesure
-- Utilisez Jinja templates
-
-## 📚 Ressources
-
+## Ressources
 - Documentation dbt : https://docs.getdbt.com/
-- Tutoriels : https://docs.getdbt.com/tutorial
+- Guide de démarrage : https://docs.getdbt.com/docs/get-started
 - Best practices : https://docs.getdbt.com/guides/best-practices
 
-## 🆘 Aide
-
-Si vous êtes bloqué :
-1. Consultez la documentation
-2. Regardez les exemples
-3. Ouvrez une issue sur le dépôt GitHub
-
-## 📤 Comment soumettre votre solution
-
-### Étapes pour pousser votre exercice sur GitHub
-
-1. **Créez votre dossier de solution** :
-   ```bash
-   cd exercice-07
-   mkdir -p solutions/votre-nom
-   cd solutions/votre-nom
-   ```
-
-2. **Copiez votre projet dbt** complet
-3. **Générez la documentation** et sauvegardez-la
-4. **Créez un fichier `resultats.md`**
-
-5. **Ajoutez et commitez** :
-   ```bash
-   git add solutions/votre-nom/
-   git commit -m "Solution exercice 07 - Votre Nom"
-   git push origin main
-   ```
-
-**Important** : N'oubliez pas de remplacer "votre-nom" par votre vrai nom !
+## Soumission
+```bash
+mkdir -p solutions/votre-nom
+# Copiez votre projet dbt complet
+git add solutions/votre-nom/
+git commit -m "Solution exercice 07 - Votre Nom"
+git push origin main
+```
+Remplacez `votre-nom` par vos nom/prénom.
