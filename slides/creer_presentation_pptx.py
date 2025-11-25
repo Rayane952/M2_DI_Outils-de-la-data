@@ -111,7 +111,7 @@ def creer_presentation():
     
     # Sauvegarder
     prs.save('cours-outils-data.pptx')
-    print("✅ Présentation PowerPoint créée : cours-outils-data.pptx")
+    print("Presentation PowerPoint creee : cours-outils-data.pptx")
 
 if __name__ == '__main__':
     creer_presentation()
